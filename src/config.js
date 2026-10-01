@@ -7,3 +7,5 @@ export const API_BASE_URL = trimSlash(import.meta.env.VITE_API_BASE_URL);
 export const ENDPOINTS = {
   installation: `${API_BASE_URL}/google_review/installation/`,
 };
+
+export const INSTALLATION_URL = ENDPOINTS.installation;

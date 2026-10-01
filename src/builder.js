@@ -1,7 +1,7 @@
 import * as realGhl from "./ghl.js";
 import { generateWidget } from "./widget/generateWidget.js";
 import { InstallationError, isUuid, verifyInstallation } from "./installation.js";
-import { API_BASE_URL } from "./config.js";
+import { API_BASE_URL, INSTALLATION_URL } from "./config.js";
 
 const PREVIEW_POLL_MS = 5000;
 
@@ -101,8 +101,8 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
 
   const location = field("location_id", "Location ID", "Paste from the Installation page");
   const setting = field("widget_setting_id", "Widget ID", "Paste from the Installation page");
-  location.input.value = saved?.location_id || "";
-  setting.input.value = saved?.widget_setting_id || "";
+  location.input.value = saved?.location_id || "1QfAGV3Jwdw6tWbWfkNn" ;
+  setting.input.value = saved?.widget_setting_id || "921421f8-b3e1-4453-8ed5-9f63795159b8";
 
   const button = h("button", "", "Apply");
   button.type = "submit";
@@ -120,7 +120,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     h(
       "p",
       "hint",
-      'In the app, open "Installation" and copy your Location ID and Widget ID into the fields below.',
+      'In the app, open "Installation" and copy your Location ID and Widget ID  into the fields below.',
     ),
     form,
     status,
@@ -142,6 +142,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
       location_id,
       widget_setting_id,
       element_id: elementId,
+      installation_url: INSTALLATION_URL,
       poll_ms: PREVIEW_POLL_MS,
     });
 

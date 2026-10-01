@@ -214,16 +214,6 @@ function ghlInit($, config) {
 
     var text = String(review.review || "");
     if (text) $card.append(renderReviewText(text, s));
-
-    var link = safeUrl(review.link);
-    if (link) {
-      $card.append(
-        $(document.createElement("a"))
-          .addClass("ghl-rw-link")
-          .attr({ href: link, target: "_blank", rel: "noopener noreferrer" })
-          .text("View on Google")
-      );
-    }
     return $card;
   }
 

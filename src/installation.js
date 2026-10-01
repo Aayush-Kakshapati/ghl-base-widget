@@ -1,4 +1,4 @@
-import { ENDPOINTS } from "./config.js";
+import { INSTALLATION_URL } from "./config.js";
 
 // The Installation page in the React app shows `location_id` and
 // `widget_settings.id`; the user pastes both into the builder form.
@@ -33,7 +33,7 @@ export async function verifyInstallation(location_id, widget_setting_id) {
 
   let res;
   try {
-    res = await fetch(`${ENDPOINTS.installation}?${query}`, {
+    res = await fetch(`${INSTALLATION_URL}?${query}`, {
       headers: { Accept: "application/json" },
     });
   } catch {

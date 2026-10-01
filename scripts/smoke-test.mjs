@@ -61,7 +61,10 @@ const installation_url = `http://127.0.0.1:${port}/google_review/installation/`;
 
 const vite = await createServer({
   server: { middlewareMode: true }, appType: "custom", logLevel: "silent",
-  define: { "import.meta.env.VITE_API_BASE_URL": JSON.stringify(`http://127.0.0.1:${port}`) },
+  define: {
+    "import.meta.env.DEV": "false",
+    "import.meta.env.VITE_API_BASE_URL": JSON.stringify(`http://127.0.0.1:${port}`),
+  },
 });
 const { generateWidget } = await vite.ssrLoadModule("/src/widget/generateWidget.js");
 
