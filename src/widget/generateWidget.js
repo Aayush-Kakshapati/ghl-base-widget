@@ -23,7 +23,11 @@ export function generateWidget({
   poll_ms, // builder-only: auto-refetch every N ms. Never set for the published widget.
 }) {
   const elementId = element_id || createElementId();
-  const elementStore = { location_id, widget_setting_id, element_id: elementId };
+  const elementStore = {
+    location_id,
+    widget_setting_id,
+    element_id: elementId,
+  };
 
   const config = {
     element_id: elementId,

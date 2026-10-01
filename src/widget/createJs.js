@@ -1,18 +1,95 @@
-import runtime from "./runtime/script.js?raw";
+const runtimeSources = import.meta.glob("./runtime/**/*.js", {
+  eager: true,
+  query: "?raw",
+  import: "default",
+});
 
-// Safe to embed inside a <script> tag.
-function safeJson(value) {
-  return JSON.stringify(value)
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+/* Runtime files MUST be loaded in dependency order. */
+const runtimeFiles = [
+  /* jQuery */
+  "jquery.js",
+
+  /* Core utilities */
+  "helpers.js",
+  "api.js",
+  "filters.js",
+  "theme.js",
+
+  /* Components */
+  "components/stars.js",
+  "components/avatar.js",
+  "components/review-text.js",
+  "components/review-card.js",
+  "components/header.js",
+  "components/content.js",
+
+  /* Layouts */
+  "layouts/collection.js",
+  "layouts/list.js",
+  "layouts/grid.js",
+  "layouts/carousel.js",
+  "layouts/floating.js",
+  "layouts/rating-badge.js",
+  "layouts/base-card.js",
+
+  /* Rendering */
+  "renderer.js",
+
+  /* Lifecycle */
+  "polling.js",
+
+  /* Entry point MUST be last. */
+  "bootstrap.js",
+];
+
+function readRuntimeFile(file) {
+  const source = runtimeSources[`./runtime/${file}`];
+
+  if (source === undefined) {
+    throw new Error(`[reviews-widget] Runtime file not found: ${file}`);
+  }
+
+  return source;
 }
 
-// runtime/script.js is a real file (easy to edit and lint). It is inlined here
-// and started with the config. No imports exist on the published page.
-export function createJs(config) {
-  return `(function () {
-${runtime}
-ghlBoot(${safeJson(config)});
-})();`;
+function indentRuntime(source) {
+  return source
+    .split("\n")
+    .map((line) => `  ${line}`)
+    .join("\n");
+}
+
+function buildRuntime() {
+  return runtimeFiles
+    .map((file) => {
+      const source = readRuntimeFile(file);
+
+      return `
+/* ===================================================== */
+/* RUNTIME: ${file} */
+/* ===================================================== */
+
+${source}
+`;
+    })
+    .join("\n");
+}
+
+export function createJs(config = {}) {
+  const runtime = buildRuntime();
+  const configJson = JSON.stringify(config);
+
+  return `/*
+ * AUTO-GENERATED REVIEWS WIDGET
+ * Do not edit this generated output directly.
+ */
+
+(function () {
+  "use strict";
+
+${indentRuntime(runtime)}
+
+  ghlBoot(${configJson});
+})();
+`;
 }
