@@ -1,0 +1,215 @@
+/* Published-widget CSS. Everything is prefixed .ghl-rw- and scoped to the
+   root, with no global resets, so it can't affect the customer's page.
+   Colours/sizes come from CSS variables that script.js sets from
+   widget_settings (background_color, star_color, ...). */
+
+.ghl-rw-root {
+  --ghl-rw-bg: #ffffff;
+  --ghl-rw-text: #16181d;
+  --ghl-rw-star: #f5a623;
+  --ghl-rw-border: #e4e6eb;
+  --ghl-rw-padding: 16px;
+  --ghl-rw-radius: 10px;
+  --ghl-rw-gap: 4px;
+  --ghl-rw-font-size: 14px;
+  --ghl-rw-items-per-row: 3;
+
+  box-sizing: border-box;
+  color: var(--ghl-rw-text);
+  font-size: var(--ghl-rw-font-size);
+  line-height: 1.5;
+}
+.ghl-rw-root *,
+.ghl-rw-root *::before,
+.ghl-rw-root *::after {
+  box-sizing: border-box;
+}
+
+/* Status (loading / error / empty) */
+.ghl-rw-status {
+  padding: 16px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Stars */
+.ghl-rw-stars {
+  display: inline-flex;
+  gap: 1px;
+}
+.ghl-rw-star {
+  color: #d1d5db;
+}
+.ghl-rw-star.is-on {
+  color: var(--ghl-rw-star);
+}
+
+/* Header: place name, "Ratings (4.7) *****  |  Reviews 120" */
+.ghl-rw-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.ghl-rw-place {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.ghl-rw-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+.ghl-rw-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ghl-rw-meta-label {
+  font-weight: 500;
+}
+.ghl-rw-count {
+  color: #6b7280;
+}
+.ghl-rw-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ghl-rw-border);
+}
+
+/* Content box: auto height, fixed-height scroll, or "view more" clip */
+.ghl-rw-content-wrap {
+  position: relative;
+}
+.ghl-rw-content-wrap.has-toggle {
+  padding-bottom: 16px;
+}
+.ghl-rw-content {
+  overscroll-behavior: contain;
+}
+.ghl-rw-content.is-scroll {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.ghl-rw-content.is-scroll::-webkit-scrollbar {
+  display: none;
+}
+.ghl-rw-content.is-clip {
+  overflow: hidden;
+}
+.ghl-rw-toggle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 18, 26, 0.12);
+}
+.ghl-rw-toggle:hover {
+  color: #111827;
+}
+
+/* Layout: list (the only one built so far). Add the others as
+   .ghl-rw-root[data-display-type="grid"] .ghl-rw-list { ... } etc. */
+.ghl-rw-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ghl-rw-gap);
+}
+
+/* Review card */
+.ghl-rw-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--ghl-rw-bg);
+  border: 1px solid var(--ghl-rw-border);
+  border-radius: var(--ghl-rw-radius);
+  padding: var(--ghl-rw-padding);
+}
+.ghl-rw-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ghl-rw-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.ghl-rw-avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ghl-rw-border);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ghl-rw-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ghl-rw-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ghl-rw-text {
+  margin: 0 0 8px;
+}
+.ghl-rw-text.is-scroll {
+  max-height: 6rem;
+  overflow-y: auto;
+}
+.ghl-rw-readmore {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #7b8270;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.ghl-rw-link {
+  font-size: 0.9em;
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* HighLevel's mobile preview adds a .--mobile class up the tree instead of
+   changing the viewport, so real @media breakpoints won't fire there. */
+.--mobile .ghl-rw-header {
+  flex-direction: column;
+}
+.--mobile .ghl-rw-place {
+  font-size: 20px;
+}
+.--mobile .ghl-rw-meta {
+  gap: 8px;
+  font-size: 12px;
+}
+.--mobile .ghl-rw-card-top {
+  gap: 6px;
+}

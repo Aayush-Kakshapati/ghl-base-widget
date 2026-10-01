@@ -1,0 +1,20 @@
+{
+  "name": "ghl-base-repo-widget",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "postmate": "^1.5.2"
+  },
+  "devDependencies": {
+    "jquery": "^3.7.1",
+    "jsdom": "^26.1.0",
+    "vite": "^8.3.0"
+  }
+}
