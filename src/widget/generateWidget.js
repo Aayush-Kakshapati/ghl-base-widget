@@ -20,7 +20,6 @@ export function generateWidget({
   widget_setting_id,
   element_id,
   installation_url = ENDPOINTS.installation,
-  poll_ms, // builder-only: auto-refetch every N ms. Never set for the published widget.
 }) {
   const elementId = element_id || createElementId();
   const elementStore = {
@@ -34,7 +33,6 @@ export function generateWidget({
     location_id,
     widget_setting_id,
     installation_url,
-    poll_ms,
   };
 
   return {

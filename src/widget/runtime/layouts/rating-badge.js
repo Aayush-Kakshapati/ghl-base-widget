@@ -1,4 +1,13 @@
 function ghlRwRenderRatingBadge($, reviews, place, settings) {
+  var positions = {
+    "bottom-left": "bottom-left",
+    "bottom-right": "bottom-right",
+    "top-left": "top-left",
+    "top-right": "top-right",
+    left: "left",
+    right: "right",
+  };
+  var position = positions[settings.floating_position] || "bottom-right";
   var average = Number(place && place.rating) || 0;
 
   var count =
@@ -6,7 +15,7 @@ function ghlRwRenderRatingBadge($, reviews, place, settings) {
       ? Number(place.rating_count)
       : reviews.length;
 
-  var $badge = ghlRwEl($, "div", "ghl-rw-badge");
+  var $badge = ghlRwEl($, "div", "ghl-rw-badge ghl-rw-badge--" + position);
 
   var $meta = ghlRwEl($, "div", "ghl-rw-meta");
 

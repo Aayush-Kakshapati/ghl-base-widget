@@ -3,8 +3,6 @@ import { generateWidget } from "./widget/generateWidget.js";
 import { InstallationError, isUuid, verifyInstallation } from "./installation.js";
 import { API_BASE_URL, INSTALLATION_URL } from "./config.js";
 
-const PREVIEW_POLL_MS = 5000;
-
 /* ---------- tiny DOM helpers (builder UI only; the widget itself uses jQuery) ---------- */
 
 function h(tag, className, text) {
@@ -133,17 +131,13 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     status.className = `status ${kind || ""}`.trim();
   }
 
-  // Built once per element and left running: its own script.js polls
-  // /installation/ on an interval, so saving settings in the React app shows
-  // up here without re-pressing Apply. poll_ms is local-preview only — the
-  // widget object sent to HighLevel via sendToGHL never gets it.
+  // The preview loads installation data when created or manually refreshed.
   function showPreview(location_id, widget_setting_id, elementId) {
     const previewWidget = generateWidget({
       location_id,
       widget_setting_id,
       element_id: elementId,
       installation_url: INSTALLATION_URL,
-      poll_ms: PREVIEW_POLL_MS,
     });
 
     const iframe = h("iframe", "preview");
@@ -153,8 +147,8 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
       `<style>body{margin:0;padding:12px;font-family:sans-serif}</style></head>` +
       `<body>${previewWidget.html}<script>${previewWidget.js}<\/script></body></html>`;
 
-    const liveNote = h("p", "live-note", `Live preview — refreshes every ${PREVIEW_POLL_MS / 1000}s`);
-    const refreshBtn = h("button", "refresh-btn", "Refresh now");
+    const liveNote = h("p", "live-note", "Preview updates when refreshed.");
+    const refreshBtn = h("button", "refresh-btn", "Refresh preview");
     refreshBtn.type = "button";
     refreshBtn.addEventListener("click", () => showPreview(location_id, widget_setting_id, elementId));
 

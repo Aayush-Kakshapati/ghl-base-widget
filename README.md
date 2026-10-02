@@ -64,13 +64,11 @@ show up on the next page load.
 
 ## Live preview while editing settings in React
 
-After Apply, the preview iframe keeps running and polls `/installation/` every 5s
-(`PREVIEW_POLL_MS` in `builder.js`), so saving a change in the React settings app shows up
-here without re-pressing Apply. A "Refresh now" button forces an immediate check.
+After Apply, the preview iframe fetches `/installation/` once. Use "Refresh preview" to
+fetch the latest saved settings after making changes in the React settings app.
 
-This is preview-only: `poll_ms` is passed to `generateWidget()` for the iframe but never for
-the widget sent via `sendToGHL`, so the real, published widget still fetches once per page
-load, same as before.
+The preview and published widget both fetch once on load; neither makes background polling
+requests.
 
 ## What `list` already does (mirrors the React preview)
 

@@ -10,7 +10,7 @@ var GHL_RW_LAYOUTS = {
 function ghlRwRender($, $root, payload) {
   var settings = payload.widget_settings || {};
 
-  var type = settings.display_type || "list";
+  var type = settings.display_type || "carousel";
 
   var layout = GHL_RW_LAYOUTS[type];
 
@@ -22,7 +22,7 @@ function ghlRwRender($, $root, payload) {
       console.warn(
         "[reviews-widget] display_type '" +
           type +
-          "' is not built yet, showing list.",
+          "' is not available, showing carousel.",
       );
     }
 
@@ -35,23 +35,18 @@ function ghlRwRender($, $root, payload) {
 
   $root.attr("data-display-type", type).empty();
 
-  /*
-   * Header.
-   */
-  $root.append(ghlRwRenderHeader($, payload.place, reviews));
-
-  /*
-   * Empty state.
-   */
+  /* Header. */
+  if (layout == GHL_RW_LAYOUTS.list || layout == GHL_RW_LAYOUTS.grid || layout == GHL_RW_LAYOUTS.carousel) {
+    $root.append(ghlRwRenderHeader($, payload.place, reviews));
+  }
+  /* Empty state. */
   if (!reviews.length) {
     $root.append(ghlRwCreateStatus($, "No reviews to show yet.", "empty"));
 
     return;
   }
 
-  /*
-   * Layout.
-   */
+  /* Layout. */
   $root.append(layout($, reviews, payload.place, settings));
 
   /*

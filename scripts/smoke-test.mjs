@@ -94,8 +94,7 @@ async function test(name, fn) {
   overrides = {}; requests = []; forced = null;
   try { await fn(); console.log("  ok  ", name); }
   catch (e) { failed++; console.log("  FAIL", name, "\n      ", e.message); }
-  // jsdom windows created with setInterval-based polling keep firing (and
-  // hitting the shared mock server) after a test ends unless stopped first.
+  // jsdom windows with autoplay timers keep firing after a test ends unless stopped first.
   while (openWindows.length) {
     const window = openWindows.pop();
     try {
@@ -236,6 +235,54 @@ await test("unbuilt display_type falls back to list (with a warning)", async () 
   assert.equal(doc.querySelectorAll(".ghl-rw-card").length, 2);
 });
 
+await test("card display renders the place summary", async () => {
+  const { doc } = await render({ display_type: "card" });
+  const card = doc.querySelector(".ghl-rw-card-widget");
+  assert.ok(card);
+  assert.equal(card.querySelector(".ghl-rw-card-widget-title").textContent, "Acme Dental");
+  assert.equal(card.querySelector(".ghl-rw-card-widget-count").textContent, "120 reviews");
+  assert.equal(card.querySelector(".ghl-rw-card-widget-average").textContent, "4.7");
+});
+
+await test("floating display renders a working review toggle", async () => {
+  const { doc } = await render({ display_type: "floating" });
+  const card = doc.querySelector(".ghl-rw-card-widget");
+  const panel = doc.querySelector(".ghl-rw-pannel");
+  assert.ok(card);
+  assert.ok(panel);
+  assert.equal(panel.style.display, "none");
+  card.click();
+  assert.notEqual(panel.style.display, "none");
+  card.click();
+  assert.equal(panel.style.display, "none");
+});
+
+await test("rating badge supports all configured positions", async () => {
+  const positions = {
+    "bottom-left": { bottom: "12px", left: "12px" },
+    "bottom-right": { bottom: "12px", right: "12px" },
+    "top-left": { top: "12px", left: "12px" },
+    "top-right": { top: "12px", right: "12px" },
+    left: { top: "50%", left: "12px", transform: "translateY(-50%)" },
+    right: { top: "50%", right: "12px", transform: "translateY(-50%)" },
+  };
+
+  for (const [position, expected] of Object.entries(positions)) {
+    const { doc, win } = await render({
+      display_type: "rating_badge",
+      floating_position: position,
+    });
+    const badge = doc.querySelector(".ghl-rw-badge");
+    const style = win.getComputedStyle(badge);
+
+    assert.ok(badge.classList.contains(`ghl-rw-badge--${position}`));
+    assert.equal(style.position, "fixed");
+    for (const [property, value] of Object.entries(expected)) {
+      assert.equal(style[property], value, `${position} ${property}`);
+    }
+  }
+});
+
 await test("no reviews after filtering shows header + empty message", async () => {
   const { doc } = await render({ min_rating: 5, __reviews: [{ id: "1", rating: 1, name: "x", review: "bad" }] });
   assert.equal(doc.querySelector(".ghl-rw-status-empty").textContent, "No reviews to show yet.");
@@ -279,49 +326,13 @@ await test("two widgets on one page share a single jQuery load and both render",
 });
 
 
-await test("poll_ms undefined by default: no setInterval, no jQuery.ajax after initial load", async () => {
+await test("widget loads once and does not include background polling", async () => {
   const dom = boot(widget);
-  const { window } = dom;
-  const ajaxCalls = [];
-  const orig = window.$.ajax.bind(window.$);
-  window.$.ajax = (...args) => { ajaxCalls.push(args); return orig(...args); };
-  // can't intercept before boot ran; instead just confirm request count stays at 1
   await waitFor(() => dom.window.document.querySelector(".ghl-rw-card"));
   assert.equal(requests.length, 1);
   await new Promise((r) => setTimeout(r, 120));
-  assert.equal(requests.length, 1, "no extra requests without poll_ms");
-});
-
-await test("poll_ms > 0: refetches on an interval and re-renders", async () => {
-  const polling = generateWidget({ location_id: LOCATION, widget_setting_id: SETTING, installation_url, poll_ms: 50 });
-  const dom = boot(polling);
-  await waitFor(() => dom.window.document.querySelector(".ghl-rw-card"));
-  const before = requests.length;
-  await new Promise((r) => setTimeout(r, 170));
-  assert.ok(requests.length > before, "expected additional polled requests");
-});
-
-await test("poll continues to show last good render if a poll request fails", async () => {
-  const polling = generateWidget({ location_id: LOCATION, widget_setting_id: SETTING, installation_url, poll_ms: 40 });
-  const dom = boot(polling);
-  const doc = dom.window.document;
-  await waitFor(() => doc.querySelector(".ghl-rw-card"));
-  forced = { status: 500, body: { code: "server" } };
-  await new Promise((r) => setTimeout(r, 100));
-  assert.equal(doc.querySelectorAll(".ghl-rw-card").length, 2, "stale content stays visible on a failed poll");
-  assert.equal(doc.querySelector(".ghl-rw-status-error"), null, "no error banner replaces the existing render on a poll");
-});
-
-await test("poll stops once the widget root is removed from the DOM", async () => {
-  const polling = generateWidget({ location_id: LOCATION, widget_setting_id: SETTING, installation_url, poll_ms: 40 });
-  const dom = boot(polling);
-  const doc = dom.window.document;
-  await waitFor(() => doc.querySelector(".ghl-rw-card"));
-  doc.getElementById(polling.elementStore.element_id).remove();
-  await new Promise((r) => setTimeout(r, 20)); // let MutationObserver microtask run
-  const before = requests.length;
-  await new Promise((r) => setTimeout(r, 120));
-  assert.equal(requests.length, before, "no further polls after the element is removed");
+  assert.equal(requests.length, 1, "no extra requests happen without an explicit refresh");
+  assert.doesNotMatch(widget.js, /poll_ms|ghlRwSetupPolling/);
 });
 
 /* ------------------------------------------------------------------ builder form */
@@ -435,17 +446,16 @@ await test("a failed re-apply keeps the previous widget and says so", async () =
   assert.equal($("iframe.preview"), before);
 });
 
-await test("the widget sent to HighLevel never carries poll_ms; only the local preview does", async () => {
+await test("published widget and local preview omit automatic polling", async () => {
   const { ghl, $, submit } = await mount(null);
   await submit(LOCATION, SETTING);
-  // config is JSON-embedded right before ghlBoot(...) is called; poll_ms must be absent (not just falsy).
-  assert.doesNotMatch(ghl.sent[0].js, /"poll_ms"/, "sendToGHL config must omit poll_ms entirely");
+  assert.doesNotMatch(ghl.sent[0].js, /poll_ms|ghlRwSetupPolling/);
   const iframe = $("iframe.preview");
-  assert.match(iframe.srcdoc, /"poll_ms":\d/, "local preview config should set a numeric poll_ms");
-  assert.ok($(".live-note").textContent.includes("refreshes every"));
+  assert.doesNotMatch(iframe.srcdoc, /poll_ms|ghlRwSetupPolling/);
+  assert.equal($(".live-note").textContent, "Preview updates when refreshed.");
 });
 
-await test("Refresh now rebuilds the preview iframe on demand", async () => {
+await test("Refresh preview rebuilds the iframe on demand", async () => {
   const { $, submit } = await mount(null);
   await submit(LOCATION, SETTING);
   const before = $("iframe.preview");

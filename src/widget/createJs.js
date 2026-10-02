@@ -30,13 +30,10 @@ const runtimeFiles = [
   "layouts/carousel.js",
   "layouts/floating.js",
   "layouts/rating-badge.js",
-  "layouts/base-card.js",
+  "layouts/card.js",
 
   /* Rendering */
   "renderer.js",
-
-  /* Lifecycle */
-  "polling.js",
 
   /* Entry point MUST be last. */
   "bootstrap.js",

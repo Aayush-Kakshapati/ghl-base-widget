@@ -22,7 +22,7 @@ After a successful check, `src/builder.js` calls `generateWidget()` from `src/wi
 
 ### 5. Preview and render
 
-The builder puts a generated copy in an iframe for preview. Preview configuration includes a polling interval, so the iframe reloads installation data periodically while settings are being edited. The production widget sent to HighLevel does not include that interval: on a customer's page, the runtime fetches the latest installation response when the page loads and renders from it.
+The builder puts a generated copy in an iframe for preview. The preview fetches installation data on load, and the user can refresh it with the Preview button after changing settings. The production widget sent to HighLevel also fetches once on page load; neither uses a polling interval.
 
 The widget code is assembled from `src/widget/createHtml.js`, `src/widget/createCss.js`, and `src/widget/createJs.js`. The JavaScript factory embeds the runtime source and configuration into a self-contained script. That runtime (`src/widget/runtime/script.js`) fetches the installation endpoint, processes settings and reviews, and renders the widget; `src/widget/runtime/widget.css` provides its isolated, prefixed styles.
 
@@ -69,14 +69,14 @@ Customer page: generated HTML + generated JS -> runtime fetch -> rendered review
 
 ### Widget assembly (`src/widget/`)
 
-- `src/widget/generateWidget.js`: Coordinates widget creation and returns `{ html, js, elementStore }`. It creates or reuses the widget's DOM ID and constructs the runtime configuration. The optional `poll_ms` is used for the builder preview only.
+- `src/widget/generateWidget.js`: Coordinates widget creation and returns `{ html, js, elementStore }`. It creates or reuses the widget's DOM ID and constructs the runtime configuration.
 - `src/widget/createHtml.js`: Produces the widget's empty root `<div>`; runtime JavaScript fills it with rendered content.
 - `src/widget/createCss.js`: Imports `runtime/widget.css` as raw text and returns it for embedding in the generated HTML.
 - `src/widget/createJs.js`: Imports `runtime/script.js` as raw text, safely serializes configuration, and wraps the runtime in a self-contained IIFE that starts with `ghlBoot()`.
 
 ### Widget runtime (`src/widget/runtime/`)
 
-- `src/widget/runtime/script.js`: Code that runs on the customer's page and inside the preview. It obtains jQuery (using an existing copy when possible), requests fresh installation data, applies widget settings and review filters, and renders the available layout. Preview polling is enabled only when a polling interval is present in its configuration.
+- `src/widget/runtime/script.js`: Code that runs on the customer's page and inside the preview. It obtains jQuery (using an existing copy when possible), requests installation data, applies widget settings and review filters, and renders the available layout.
 - `src/widget/runtime/widget.css`: Styles the rendered widget. Its `ghl-rw-` class names and root scoping help prevent collisions with the host page's CSS.
 
 ## Commands

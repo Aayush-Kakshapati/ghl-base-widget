@@ -12,7 +12,7 @@ function ghlRwLoadReviews($, config) {
   });
 }
 
-function ghlRwHandleLoadError($, $root, xhr, textStatus, isPoll) {
+function ghlRwHandleLoadError($, $root, xhr, textStatus) {
   var body = xhr && xhr.responseJSON ? xhr.responseJSON : {};
 
   if (window.console) {
@@ -23,10 +23,5 @@ function ghlRwHandleLoadError($, $root, xhr, textStatus, isPoll) {
     );
   }
 
-  /*
-   * During polling, keep the previous successful render.
-   */
-  if (!isPoll) {
-    ghlRwShowStatus($, $root, "Reviews are currently unavailable.", "error");
-  }
+  ghlRwShowStatus($, $root, "Reviews are currently unavailable.", "error");
 }

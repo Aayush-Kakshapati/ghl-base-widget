@@ -3,43 +3,30 @@ function ghlInit($, config) {
 
   var $root = $(root);
 
-  /*
-   * Don't initialize the same widget twice.
-   */
+  /* Don't initialize the same widget twice. */
   if (!$root.length || $root.data("ghlRwInit")) {
     return;
   }
 
   $root.data("ghlRwInit", true);
 
-  function load(isPoll) {
-    if (!isPoll) {
-      ghlRwShowStatus($, $root, "Loading reviews\u2026", "loading");
-    }
+  function load() {
+    ghlRwShowStatus($, $root, "Loading reviews\u2026", "loading");
 
     ghlRwLoadReviews($, config)
       .done(function (payload) {
         ghlRwRender($, $root, payload || {});
       })
       .fail(function (xhr, textStatus) {
-        ghlRwHandleLoadError($, $root, xhr, textStatus, isPoll);
+        ghlRwHandleLoadError($, $root, xhr, textStatus);
       });
   }
 
-  /*
-   * Initial request.
-   */
-  load(false);
-
-  /*
-   * Builder preview polling.
-   */
-  ghlRwSetupPolling($, $root, config, load);
+  /* Initial request. */
+  load();
 }
 
-/**
- * Public entry point called by createJs.js.
- */
+/* Public entry point called by createJs.js. */
 function ghlBoot(config) {
   ghlRwWithJQuery(function ($) {
     ghlInit($, config);

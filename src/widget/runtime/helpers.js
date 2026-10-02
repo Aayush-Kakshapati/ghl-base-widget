@@ -6,21 +6,12 @@ function ghlRwHas(value) {
   return value !== undefined && value !== null && value !== "";
 }
 
-/**
- * Numeric settings are treated as pixels.
- *
- * Examples:
- *   20     -> "20px"
- *   "20"   -> "20px"
- *   "1rem" -> "1rem"
- */
 function ghlRwPx(value) {
   return /^\d+(\.\d+)?$/.test(String(value)) ? value + "px" : value;
 }
 
-/**
- * Only allow http(s) URLs.
- *
+/* Only allow http(s) URLs.
+
  * Review thumbnails and external links are third-party data,
  * so javascript:, data:, etc. are rejected.
  */
