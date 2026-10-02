@@ -1,7 +1,7 @@
 import * as realGhl from "./ghl.js";
 import { generateWidget } from "./widget/generateWidget.js";
 import { InstallationError, isUuid, verifyInstallation } from "./installation.js";
-import { API_BASE_URL, INSTALLATION_URL } from "./config.js";
+import { API_BASE_URL, GET_WEB_WIDGET_DATA } from "./config.js";
 
 /* ---------- tiny DOM helpers (builder UI only; the widget itself uses jQuery) ---------- */
 
@@ -137,7 +137,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
       location_id,
       widget_setting_id,
       element_id: elementId,
-      installation_url: INSTALLATION_URL,
+      get_web_widget_data_url: GET_WEB_WIDGET_DATA,
     });
 
     const iframe = h("iframe", "preview");

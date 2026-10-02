@@ -19,7 +19,7 @@ export function generateWidget({
   location_id,
   widget_setting_id,
   element_id,
-  installation_url = ENDPOINTS.installation,
+  get_web_widget_data_url = ENDPOINTS.getWebWidgetData,
 }) {
   const elementId = element_id || createElementId();
   const elementStore = {
@@ -32,7 +32,7 @@ export function generateWidget({
     element_id: elementId,
     location_id,
     widget_setting_id,
-    installation_url,
+    get_web_widget_data_url,
   };
 
   return {

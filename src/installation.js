@@ -1,4 +1,4 @@
-import { INSTALLATION_URL } from "./config.js";
+import { GET_WEB_WIDGET_DATA } from "./config.js";
 
 // The Installation page in the React app shows `location_id` and
 // `widget_settings.id`; the user pastes both into the builder form.
@@ -33,7 +33,7 @@ export async function verifyInstallation(location_id, widget_setting_id) {
 
   let res;
   try {
-    res = await fetch(`${INSTALLATION_URL}?${query}`, {
+    res = await fetch(`${GET_WEB_WIDGET_DATA}?${query}`, {
       headers: { Accept: "application/json" },
     });
   } catch {

@@ -1,6 +1,6 @@
 function ghlRwLoadReviews($, config) {
   return $.ajax({
-    url: config.installation_url,
+    url: config.get_web_widget_data_url,
     type: "GET",
     dataType: "json",
     timeout: 15000,
