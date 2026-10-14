@@ -1,6 +1,10 @@
 import * as realGhl from "./ghl.js";
 import { generateWidget } from "./widget/generateWidget.js";
-import { InstallationError, isUuid, verifyInstallation } from "./installation.js";
+import {
+  InstallationError,
+  isUuid,
+  verifyInstallation,
+} from "./installation.js";
 import { API_BASE_URL, GET_WEB_WIDGET_DATA } from "./config.js";
 import { h } from "./settings/dom.js";
 import { createSettingsPanel } from "./settings/panel.js";
@@ -36,7 +40,11 @@ function field(id, label, placeholder) {
 export async function startBuilder(app, { ghl = realGhl } = {}) {
   if (!API_BASE_URL) {
     app.replaceChildren(
-      h("p", "status is-error", "VITE_API_BASE_URL is not set. Copy .env.example to .env and set it."),
+      h(
+        "p",
+        "status is-error",
+        "VITE_API_BASE_URL is not set. Copy .env.example to .env and set it.",
+      ),
     );
     return;
   }
@@ -45,10 +53,19 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
   let elementId = saved?.element_id;
   let applied = false;
 
-  const location = field("location_id", "Location ID", "Paste from the Installation page");
-  const setting = field("widget_setting_id", "Widget ID", "Paste from the Installation page");
-  location.input.value = saved?.location_id || "1QfAGV3Jwdw6tWbWfkNn" ;
-  setting.input.value = saved?.widget_setting_id || "921421f8-b3e1-4453-8ed5-9f63795159b8";
+  const location = field(
+    "location_id",
+    "Location ID",
+    "Paste from the Installation page",
+  );
+  const setting = field(
+    "widget_setting_id",
+    "Widget ID",
+    "Paste from the Installation page",
+  );
+  location.input.value = saved?.location_id || "1QfAGV3Jwdw6tWbWfkNn";
+  setting.input.value =
+    saved?.widget_setting_id || "921421f8-b3e1-4453-8ed5-9f63795159b8";
 
   const button = h("button", "", "Apply");
   button.type = "submit";
@@ -92,15 +109,30 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     iframe.title = "Widget preview";
     iframe.srcdoc =
       `<!DOCTYPE html><html><head><meta charset="UTF-8">` +
-      `<style>body{margin:0;padding:12px;font-family:sans-serif}</style></head>` +
+      `<style>` +
+      `html,body{width:100%;height:100%;margin:0}` +
+      `body{font-family:sans-serif}` +
+      `.ghl-rw-root{box-sizing:border-box;width:100%;height:100%;min-height:100%;background:var(--ghl-rw-bg,#fff)}` +
+      `</style></head>` +
       `<body>${previewWidget.html}<script>${previewWidget.js}<\/script></body></html>`;
 
-    const liveNote = h("p", "live-note", "Preview refreshes after each saved change.");
+    const liveNote = h(
+      "p",
+      "live-note",
+      "Preview refreshes after each saved change.",
+    );
     const refreshBtn = h("button", "refresh-btn", "Refresh preview");
     refreshBtn.type = "button";
-    refreshBtn.addEventListener("click", () => showPreview(location_id, widget_setting_id, elementId));
+    refreshBtn.addEventListener("click", () =>
+      showPreview(location_id, widget_setting_id, elementId),
+    );
 
-    previewBox.replaceChildren(h("h2", "", "Preview"), liveNote, refreshBtn, iframe);
+    previewBox.replaceChildren(
+      h("h2", "", "Preview"),
+      liveNote,
+      refreshBtn,
+      iframe,
+    );
   }
 
   // The panel saves to the database (WidgetSetting) with a PATCH. Nothing is
@@ -129,7 +161,10 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     const widget_setting_id = setting.input.value.trim();
 
     if (!location_id || !widget_setting_id) {
-      return setStatus(new InstallationError("missing_identifiers").message, "is-error");
+      return setStatus(
+        new InstallationError("missing_identifiers").message,
+        "is-error",
+      );
     }
     if (!isUuid(widget_setting_id)) {
       return setStatus(
@@ -142,18 +177,31 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     setStatus("Checking…", "is-busy");
     try {
       const data = await verifyInstallation(location_id, widget_setting_id);
-      const widget = generateWidget({ location_id, widget_setting_id, element_id: elementId });
+      const widget = generateWidget({
+        location_id,
+        widget_setting_id,
+        element_id: elementId,
+      });
       elementId = widget.elementStore.element_id;
 
       ghl.sendToGHL(widget);
       applied = true;
       renderSettings(data, location_id, widget_setting_id);
       showPreview(location_id, widget_setting_id, elementId);
-      setStatus("Connected. The preview below is what will appear on your page.", "is-ok");
+      setStatus(
+        "Connected. The preview below is what will appear on your page.",
+        "is-ok",
+      );
     } catch (err) {
       console.error(err);
-      const message = err instanceof InstallationError ? err.message : "Something went wrong.";
-      setStatus(applied ? `${message} Your previous widget is unchanged.` : message, "is-error");
+      const message =
+        err instanceof InstallationError
+          ? err.message
+          : "Something went wrong.";
+      setStatus(
+        applied ? `${message} Your previous widget is unchanged.` : message,
+        "is-error",
+      );
     } finally {
       button.disabled = false;
     }

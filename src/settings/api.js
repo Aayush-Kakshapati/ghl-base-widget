@@ -2,16 +2,14 @@ import { API_BASE_URL } from "../config.js";
 
 /*
  * Same endpoint the admin app's apiService.updateWidgetSettings(location_id, fields)
- * uses: PATCH with only the changed fields, answered with the saved settings.
- * Override with VITE_WIDGET_SETTINGS_URL (use {location_id} as the placeholder)
- * if your route differs.
+ * uses: PATCH with the location id and changed fields, answered with the saved settings.
+ * Override with VITE_WIDGET_SETTINGS_URL if your API is mounted at a different URL.
  */
-const TEMPLATE =
+const WIDGET_SETTINGS_URL =
   import.meta.env.VITE_WIDGET_SETTINGS_URL ||
-  `${API_BASE_URL}/google-review/widget-settings/{location_id}/`;
+  `${API_BASE_URL}/google-review/widget-settings/`;
 
-export const widgetSettingsUrl = (location_id) =>
-  TEMPLATE.replace("{location_id}", encodeURIComponent(location_id));
+export const widgetSettingsUrl = () => WIDGET_SETTINGS_URL;
 
 export class SettingsSaveError extends Error {}
 
@@ -34,10 +32,10 @@ function describe(status, data) {
 export async function updateWidgetSettings(location_id, fields) {
   let res;
   try {
-    res = await fetch(widgetSettingsUrl(location_id), {
+    res = await fetch(widgetSettingsUrl(), {
       method: "PATCH",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify(fields),
+      body: JSON.stringify({ ...fields, location_id }),
     });
   } catch {
     throw new SettingsSaveError("Could not reach the server. Your change was not saved.");

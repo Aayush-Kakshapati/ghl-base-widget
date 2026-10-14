@@ -39,9 +39,23 @@ const place = { id: "p1", place_id: "cid1", title: "Acme Dental", rating: "4.7",
 // ---- mock /installation/ (same error codes as InstallationView) ----
 let overrides = {};
 let requests = [];
+let settingsRequests = [];
 let forced = null; // { status, body } to force a response
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
+  if (req.method === "PATCH" && url.pathname.endsWith("/google-review/widget-settings/")) {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    settingsRequests.push({ pathname: url.pathname, body });
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json");
+    if (forced) {
+      res.statusCode = forced.status;
+      return res.end(forced.raw ?? JSON.stringify(forced.body));
+    }
+    return res.end(JSON.stringify({ ...baseSettings, ...body }));
+  }
   requests.push(Object.fromEntries(url.searchParams));
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Content-Type", "application/json");
@@ -67,6 +81,7 @@ const vite = await createServer({
   },
 });
 const { generateWidget } = await vite.ssrLoadModule("/src/widget/generateWidget.js");
+const { updateWidgetSettings } = await vite.ssrLoadModule("/src/settings/api.js");
 
 const openWindows = [];
 function boot(widget, { withJQuery = true, scrollHeight } = {}) {
@@ -91,7 +106,7 @@ const waitFor = async (fn, ms = 3000) => {
 
 let failed = 0;
 async function test(name, fn) {
-  overrides = {}; requests = []; forced = null;
+  overrides = {}; requests = []; settingsRequests = []; forced = null;
   try { await fn(); console.log("  ok  ", name); }
   catch (e) { failed++; console.log("  FAIL", name, "\n      ", e.message); }
   // jsdom windows with autoplay timers keep firing after a test ends unless stopped first.
@@ -115,6 +130,17 @@ async function render(o = {}, bootOpts) {
 }
 
 console.log("\nwidget");
+await test("settings PATCH uses the backend route and includes the location id", async () => {
+  const saved = await updateWidgetSettings(LOCATION, { background_color: "#123456" });
+  assert.equal(settingsRequests.length, 1);
+  assert.equal(settingsRequests[0].pathname, "/google-review/widget-settings/");
+  assert.deepEqual(settingsRequests[0].body, {
+    location_id: LOCATION,
+    background_color: "#123456",
+  });
+  assert.equal(saved.background_color, "#123456");
+});
+
 await test("generateWidget returns html/js/elementStore with ids only", () => {
   assert.deepEqual(Object.keys(widget).sort(), ["elementStore", "html", "js"]);
   assert.deepEqual(Object.keys(widget.elementStore).sort(), ["element_id", "location_id", "widget_setting_id"]);
