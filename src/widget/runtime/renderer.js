@@ -22,7 +22,7 @@ function ghlRwRender($, $root, payload) {
       console.warn(
         "[reviews-widget] display_type '" +
           type +
-          "' is not available, showing carousel.",
+          "' is not available, showing list.",
       );
     }
 
@@ -34,6 +34,15 @@ function ghlRwRender($, $root, payload) {
   ghlRwApplyTheme($, $root, settings);
 
   $root.attr("data-display-type", type).empty();
+
+  /*
+   * Custom CSS from the admin. It is set via .text() (never parsed as HTML)
+   * and sits inside the root, after the widget stylesheet, so it overrides
+   * the defaults just like the admin's live preview.
+   */
+  if (settings.custom_css) {
+    $root.append($(document.createElement("style")).text(String(settings.custom_css)));
+  }
 
   /* Header. */
   if (layout == GHL_RW_LAYOUTS.list || layout == GHL_RW_LAYOUTS.grid || layout == GHL_RW_LAYOUTS.carousel) {

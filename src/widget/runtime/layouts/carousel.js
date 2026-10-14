@@ -10,7 +10,9 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
     Math.min(parseInt(settings.items_per_row, 10) || 3, reviews.length),
   );
 
-  var displayType = settings.display_type === "slide" ? "slide" : "scroll";
+  /* Mode comes from animation_type ("slide" | "scroll"); display_type is the
+   * layout name ("carousel"), so it must not be used here. */
+  var displayType = settings.animation_type === "slide" ? "slide" : "scroll";
 
   var $carousel = $("<div>", {
     class: "ghl-rw-carousel",
@@ -63,11 +65,12 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
   $carousel.append($viewport);
 
   /* SCROLL MODE */
-  if (settings.animation_type === "scroll") {
+  if (displayType === "scroll") {
     requestAnimationFrame(function () {
-      var $firstClone = $track.find(".ghl-rw-carousel-item").eq(reviews.length);
+      var $items = $track.find(".ghl-rw-carousel-item");
 
-      var scrollDistance = $firstClone.position().left;
+      var scrollDistance =
+        $items.eq(reviews.length).position().left - $items.eq(0).position().left;
 
       $track.css("--carousel-scroll-distance", -scrollDistance + "px");
     });
@@ -85,7 +88,7 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
   }
 
   /* SLIDE MODE */
-  if (settings.animation_type === "slide") {
+  if (displayType === "slide") {
     var index = 0;
     var timer = null;
 
@@ -118,7 +121,7 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
         animationDuration,
         "linear",
         function () {
-                    if (index >= reviews.length) {
+          if (index >= reviews.length) {
             index = 0;
 
             $track.css("left", 0);
@@ -127,8 +130,20 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
       );
     }
 
+    var hovered = false;
+
+    $carousel.on("mouseenter", function () {
+      hovered = true;
+    });
+
+    $carousel.on("mouseleave", function () {
+      hovered = false;
+    });
+
     timer = window.setInterval(function () {
-      goToSlide(index + 1);
+      if (!hovered) {
+        goToSlide(index + 1);
+      }
     }, interval);
 
     $carousel.data("ghl-rw-carousel-destroy", function () {
@@ -138,7 +153,7 @@ function ghlRwRenderCarousel($, reviews, place, settings) {
     });
   }
 
-  /* SCROLL cleanup. */
+  /* SCROLL cleanup (slide mode registered its own above). */
   if (displayType === "scroll") {
     $carousel.data("ghl-rw-carousel-destroy", function () {
       $track.css("animation-play-state", "paused");

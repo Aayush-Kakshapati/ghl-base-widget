@@ -1,3 +1,4 @@
+/* Mirrors BadgePreview.jsx: star, average, divider, "N reviews". */
 function ghlRwRenderRatingBadge($, reviews, place, settings) {
   var positions = {
     "bottom-left": "bottom-left",
@@ -17,30 +18,15 @@ function ghlRwRenderRatingBadge($, reviews, place, settings) {
 
   var $badge = ghlRwEl($, "div", "ghl-rw-badge ghl-rw-badge--" + position);
 
-  var $meta = ghlRwEl($, "div", "ghl-rw-meta");
-
-  var $rating = ghlRwEl($, "span", "ghl-rw-meta-item");
-
-  $rating
-    .append(
-      ghlRwEl($, "span", "ghl-rw-meta-label").text(
-        "Ratings (" + average.toFixed(1) + ")",
-      ),
-    )
-    .append(ghlRwRenderStars($, average));
-
-  var $count = ghlRwEl($, "span", "ghl-rw-meta-item");
-
-  $count
-    .append(ghlRwEl($, "span", "ghl-rw-meta-label").text("Reviews"))
-    .append(ghlRwEl($, "span", "ghl-rw-count").text(String(count)));
-
-  $meta
-    .append($rating)
+  $badge
+    .append(ghlRwRenderStars($, 5, true))
+    .append(ghlRwEl($, "span", "ghl-rw-badge-average").text(average.toFixed(1)))
     .append(ghlRwEl($, "span", "ghl-rw-divider"))
-    .append($count);
-
-  $badge.append($meta);
+    .append(
+      ghlRwEl($, "span", "ghl-rw-badge-count").text(
+        count + (count === 1 ? " review" : " reviews"),
+      ),
+    );
 
   return ghlRwRenderContent($, $badge, settings);
 }

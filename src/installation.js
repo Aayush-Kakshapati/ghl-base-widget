@@ -27,7 +27,7 @@ export class InstallationError extends Error {
   }
 }
 
-// GET /installation/ -> { place, widget_settings, reviews }. Throws InstallationError.
+// GET widget data -> { place, widget_settings, reviews }. Throws InstallationError.
 export async function verifyInstallation(location_id, widget_setting_id) {
   const query = new URLSearchParams({ location_id, widget_setting_id });
 

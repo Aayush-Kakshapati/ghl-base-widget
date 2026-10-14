@@ -12,15 +12,25 @@ function ghlRwRenderReviewCard($, review, settings) {
 
   var $who = ghlRwEl($, "div", "ghl-rw-who");
 
-  $who
-    .append(
-      ghlRwEl($, "strong", "ghl-rw-name").text(review.name || "Anonymous"),
-    )
-    .append(ghlRwRenderStars($, review.rating));
+  $who.append(
+    ghlRwEl($, "strong", "ghl-rw-name").text(review.name || "Anonymous"),
+  );
+
+  /* Relative date ("2 weeks ago"), shown under the name like the admin preview. */
+  if (ghlRwHas(review.date)) {
+    $who.append(ghlRwEl($, "span", "ghl-rw-date").text(String(review.date)));
+  }
 
   $top.append(ghlRwRenderAvatar($, review)).append($who);
 
   $card.append($top);
+
+  /* Stars sit on their own row under the header, as in the admin preview. */
+  $card.append(
+    ghlRwEl($, "div", "ghl-rw-card-rating").append(
+      ghlRwRenderStars($, review.rating),
+    ),
+  );
 
   /*
    * Review body.

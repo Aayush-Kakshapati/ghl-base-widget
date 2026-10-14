@@ -44,7 +44,7 @@ const DISPLAY_TYPE_LABELS = {
   rating_badge: "Rating badge",
 };
 
-// Renders what GET /installation/ returned: place + the saved widget_settings.
+// Renders the place and saved widget_settings returned by the data endpoint.
 function renderSummary(box, { place, widget_settings: s }) {
   const rows = [
     summaryRow("Place", place?.title || "—"),
@@ -80,7 +80,7 @@ function renderSummary(box, { place, widget_settings: s }) {
 /*
  * The builder is a small form. The user opens "Installation" in the React app,
  * copies the Location ID and the Widget ID, and pastes them here. We check them
- * against GET /installation/ and only then send the widget to HighLevel, so a
+ * against the data endpoint and only then send the widget to HighLevel, so a
  * typo never replaces a working widget.
  *
  * `ghl` is injectable so tests can run without HighLevel.
