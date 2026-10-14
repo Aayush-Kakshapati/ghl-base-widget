@@ -2,15 +2,11 @@ import * as realGhl from "./ghl.js";
 import { generateWidget } from "./widget/generateWidget.js";
 import { InstallationError, isUuid, verifyInstallation } from "./installation.js";
 import { API_BASE_URL, GET_WEB_WIDGET_DATA } from "./config.js";
+import { h } from "./settings/dom.js";
+import { createSettingsPanel } from "./settings/panel.js";
+import { updateWidgetSettings } from "./settings/api.js";
 
 /* ---------- tiny DOM helpers (builder UI only; the widget itself uses jQuery) ---------- */
-
-function h(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
 
 function field(id, label, placeholder) {
   const wrap = h("div", "field");
@@ -27,54 +23,6 @@ function field(id, label, placeholder) {
   });
   wrap.append(labelEl, input);
   return { wrap, input };
-}
-
-function summaryRow(label, value) {
-  const row = h("div", "summary-row");
-  row.append(h("dt", "", label), h("dd", "", value));
-  return row;
-}
-
-const DISPLAY_TYPE_LABELS = {
-  list: "List",
-  grid: "Grid",
-  carousel: "Carousel",
-  floating: "Floating",
-  card: "Card",
-  rating_badge: "Rating badge",
-};
-
-// Renders the place and saved widget_settings returned by the data endpoint.
-function renderSummary(box, { place, widget_settings: s }) {
-  const rows = [
-    summaryRow("Place", place?.title || "—"),
-    summaryRow(
-      "Rating",
-      place?.rating ? `${Number(place.rating).toFixed(1)} ★ (${place.rating_count ?? 0} reviews)` : "—",
-    ),
-    summaryRow("Display type", DISPLAY_TYPE_LABELS[s.display_type] || s.display_type || "—"),
-    summaryRow("Minimum rating shown", s.min_rating ? `${s.min_rating}★ and up` : "Any"),
-    summaryRow("Max reviews", s.max_reviews > 0 ? s.max_reviews : "Unlimited"),
-    summaryRow("Review text", s.show_reviews_with_text ? "Text reviews only" : "All reviews"),
-  ];
-
-  const swatches = h("div", "swatches");
-  [
-    ["Background", s.background_color],
-    ["Text", s.text_color],
-    ["Star", s.star_color],
-    ["Border", s.border_color],
-  ].forEach(([label, color]) => {
-    if (!color) return;
-    const chip = h("span", "swatch");
-    chip.style.setProperty("--swatch-color", color);
-    chip.title = `${label}: ${color}`;
-    swatches.append(chip);
-  });
-
-  const dl = h("dl", "summary");
-  dl.append(...rows);
-  box.replaceChildren(h("h2", "", "Widget settings"), dl, swatches);
 }
 
 /*
@@ -106,7 +54,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
   button.type = "submit";
   const status = h("p", "status");
   status.setAttribute("role", "status");
-  const summaryBox = h("div", "summary-box");
+  const settingsBox = h("div", "settings-box");
   const previewBox = h("div", "preview-box");
 
   const form = h("form", "form");
@@ -122,7 +70,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
     ),
     form,
     status,
-    summaryBox,
+    settingsBox,
     previewBox,
   );
 
@@ -147,12 +95,33 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
       `<style>body{margin:0;padding:12px;font-family:sans-serif}</style></head>` +
       `<body>${previewWidget.html}<script>${previewWidget.js}<\/script></body></html>`;
 
-    const liveNote = h("p", "live-note", "Preview updates when refreshed.");
+    const liveNote = h("p", "live-note", "Preview refreshes after each saved change.");
     const refreshBtn = h("button", "refresh-btn", "Refresh preview");
     refreshBtn.type = "button";
     refreshBtn.addEventListener("click", () => showPreview(location_id, widget_setting_id, elementId));
 
     previewBox.replaceChildren(h("h2", "", "Preview"), liveNote, refreshBtn, iframe);
+  }
+
+  // The panel saves to the database (WidgetSetting) with a PATCH. Nothing is
+  // written to HighLevel's elementStore: it keeps only the ids, and the widget
+  // fetches the saved values itself. After each save the preview is reloaded so
+  // it re-fetches those values.
+  let previewTimer = null;
+  function renderSettings(data, location_id, widget_setting_id) {
+    const panel = createSettingsPanel({
+      settings: data.widget_settings,
+      place: data.place,
+      save: (fields) => updateWidgetSettings(location_id, fields),
+      onSaved: () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(
+          () => showPreview(location_id, widget_setting_id, elementId),
+          150,
+        );
+      },
+    });
+    settingsBox.replaceChildren(panel.el);
   }
 
   async function apply() {
@@ -178,7 +147,7 @@ export async function startBuilder(app, { ghl = realGhl } = {}) {
 
       ghl.sendToGHL(widget);
       applied = true;
-      renderSummary(summaryBox, data);
+      renderSettings(data, location_id, widget_setting_id);
       showPreview(location_id, widget_setting_id, elementId);
       setStatus("Connected. The preview below is what will appear on your page.", "is-ok");
     } catch (err) {
